@@ -2,7 +2,7 @@ from datetime import datetime
 from json import load
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
-from typing import Optional
+from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
@@ -77,9 +77,9 @@ class Comic:
         tag = list(soup.find("div", {"class": "gc-avatar gc-avatar--creator xs"}).children)[0]
         self.avatar = tag.attrs["src"]
 
-        
+
     @property
-    def calendar(self) -> list[datetime]:
+    def calendar(self) -> List[datetime]:
         calendar_url = f"{GOCOMICS_BASE_URL}calendar/{self.identifier}/{self.date.strftime('%Y/%m')}"
         with urlopen(calendar_url) as result:
             if result.geturl() != calendar_url:
