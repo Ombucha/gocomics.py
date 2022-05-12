@@ -42,7 +42,7 @@ class Comic:
     """
 
     def __init__(self, identifier: str, date: Optional[datetime] = None, *, random: bool = False) -> None:
-        
+
         now = datetime.now()
 
         if date is not None and random:
@@ -62,7 +62,7 @@ class Comic:
         page = Request(self.url)
         with urlopen(page) as result:
             soup = BeautifulSoup(result.read(), 'html.parser')
-        
+
         tag = soup.find("div", {"data-shareable-model": "FeatureItem"})
         self.shareable_id = int(tag.attrs["data-shareable-id"])
         self.feature_id = int(tag.attrs["data-feature-id"])
@@ -77,9 +77,14 @@ class Comic:
         tag = list(soup.find("div", {"class": "gc-avatar gc-avatar--creator xs"}).children)[0]
         self.avatar = tag.attrs["src"]
 
+        
+    @property
+    def calendar(self) -> list[datetime]:
         calendar_url = f"{GOCOMICS_BASE_URL}calendar/{self.identifier}/{self.date.strftime('%Y/%m')}"
         with urlopen(calendar_url) as result:
             if result.geturl() != calendar_url:
                 path = urlparse(result.geturl()).path
                 calendar_url = f"{GOCOMICS_BASE_URL}calendar{path}/{self.date.strftime('%Y/%m')}"
-        self.calendar = [datetime(*[int(_element) for _element in element.replace('"', "").split("/")]) for element in load(urlopen(calendar_url))]
+        with urlopen(calendar_url) as result:
+            calendar_list = [datetime(*[int(_element) for _element in element.replace('"', "").split("/")]) for element in load(result)]
+        return calendar_list
