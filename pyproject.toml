@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "gocomics.py"
 version = "1.0.0"
-description = "Fetch comics from GoComics."]
+description = "Fetch comics from GoComics."
+authors = ["Mr.Brawler <omkaar.nerurkar@gmail.com>"]
 license = "MIT"
-authors = [{name = "Mr.Brawler <omkaar.nerurkar@gmail.com>"}]
 readme = "README.rst"
 repository = "https://github.com/Pysics/gocomics.py/"
 documentation = "https://gocomics.readthedocs.io/"
