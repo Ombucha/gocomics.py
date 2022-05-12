@@ -49,4 +49,4 @@ Links
 -----
 
 - `GoComics <https://gocomics.com/>`_
-- `Documentation <https://gocomicspy.readthedocs.io/>`_
+- `Documentation <https://gocomics.readthedocs.io/>`_

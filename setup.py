@@ -7,7 +7,7 @@ README = (HERE / "README.rst").read_text()
 
 setup(
     name = "gocomics.py",
-    version = "1.0.1",
+    version = "1.0.2",
     description = "Fetch comics from GoComics.",
     long_description = README,
     long_description_content_type = "text/x-rst",
@@ -24,5 +24,5 @@ setup(
     python_requires='>= 3.8.0',
     packages = ["gocomics"],
     include_package_data = True,
-    install_requires = ["beautifulsoup4"],
+    install_requires = ["beautifulsoup4"]
 )
