@@ -10,7 +10,7 @@ setup(
     version = "1.0.0",
     description = "Fetch comics from GoComics.",
     long_description = README,
-    long_description_content_type = "text/markdown",
+    long_description_content_type = "text/x-rst",
     url = "https://github.com/Pysics/gocomics.py",
     author = "Omkaar",
     author_email = "omkaar.nerurkar@gmail.com",
