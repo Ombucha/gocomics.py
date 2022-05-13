@@ -19,8 +19,8 @@ class Comic:
     :type identifier: :class:`str`
     :param date: The comic's date.
     :type date: Optional[:class:`datetime`]
-    :param random: Optional[:class:`bool`]
-    :type random: Optional[:class:`datetime`]
+    :param random: Whether to choose a random comic, or not.
+    :type random: Optional[:class:`bool`]
 
     .. note::
 
