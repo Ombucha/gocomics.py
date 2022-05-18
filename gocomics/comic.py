@@ -73,7 +73,7 @@ class Comic:
         if date is not None and random:
             raise ValueError("If 'random' is 'True', 'date' must not be specified.")
 
-        if (date is not None) and (now.year < date.year or now.month < date.month or now.day < date.day):
+        if (date is not None) and ((now.year < date.year) or (now.year == date.year and now.month < date.month) or (now.year == date.year and now.month == date.month and now.day < date.day)):
             raise ValueError("Date must be in the past.")
 
         self.identifier = identifier
