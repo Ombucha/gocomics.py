@@ -33,3 +33,17 @@ Comic
 
 .. autoclass:: gocomics.Comic
     :members:
+
+
+Comic List
+----------
+
+.. autoclass:: gocomics.ComicList
+    :members:
+
+
+Other Functions
+---------------
+
+.. autofunction:: gocomics.fetch_comics
+.. autofunction:: gocomics.search

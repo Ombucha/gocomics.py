@@ -23,17 +23,19 @@ SOFTWARE.
 """
 
 
+from __future__ import annotations
+
 from datetime import datetime
+from functools import cached_property
 from json import load
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from typing import List, Optional
 
 from bs4 import BeautifulSoup
+from requests.utils import requote_uri
 
-
-GOCOMICS_BASE_URL = "https://gocomics.com/"
-
+from .endpoints import BASE_URL
 
 class Comic:
 
@@ -53,10 +55,12 @@ class Comic:
 
     :ivar accountable_person: The person accountable for the comic.
     :ivar avatar: The url of the comic avatar.
+    :ivar banner: The comic's banner.
     :ivar calendar: A list containing comics released in that month.
     :ivar code: The code associated with the comic.
     :ivar creator: The creator of the comic.
     :ivar date: The comic's date
+    :ivar feature_banner: The comic's banner which is featured in searches.
     :ivar feature_id: The comic's feature ID.
     :ivar formatted_date: A formatted version of the comic's date.
     :ivar identifier: The comic's identifier.
@@ -80,13 +84,13 @@ class Comic:
         self.date = date if date else now
 
         if random:
-            self.url = f"{GOCOMICS_BASE_URL}random/{self.identifier}"
+            url = f"{BASE_URL}random/{self.identifier}"
         else:
-            self.url = f"{GOCOMICS_BASE_URL}{self.identifier}/{self.date.strftime('%Y/%m/%d')}"
+            url = f"{BASE_URL}{self.identifier}/{self.date.strftime('%Y/%m/%d')}"
 
-        page = Request(self.url)
+        page = Request(url)
         with urlopen(page) as result:
-            soup = BeautifulSoup(result.read(), 'html.parser')
+            soup = BeautifulSoup(result.read(), "html.parser")
 
         tag = soup.find("div", {"data-shareable-model": "FeatureItem"})
         self.shareable_id = int(tag.attrs["data-shareable-id"])
@@ -102,14 +106,27 @@ class Comic:
         tag = list(soup.find("div", {"class": "gc-avatar gc-avatar--creator xs"}).children)[0]
         self.avatar = tag.attrs["src"]
 
+        tag = soup.find("img", {"class": "lazyload img-fluid"})
+        self.banner = tag.attrs["src"]
 
-    @property
+    def __eq__(self, __o: Comic) -> bool:
+        return self.url == __o.url
+
+    @cached_property
+    def feature_banner(self) -> str:
+        page = Request(requote_uri(f"{BASE_URL}search/full_results?category=feature&terms={self.name}"))
+        with urlopen(page) as result:
+            soup = BeautifulSoup(result.read(), "html.parser")
+        banner = soup.find("img", {"class": "lazyload img-fluid"}).attrs["src"]
+        return banner
+        
+    @cached_property
     def calendar(self) -> List[datetime]:
-        calendar_url = f"{GOCOMICS_BASE_URL}calendar/{self.identifier}/{self.date.strftime('%Y/%m')}"
+        calendar_url = f"{BASE_URL}calendar/{self.identifier}/{self.date.strftime('%Y/%m')}"
         with urlopen(calendar_url) as result:
             if result.geturl() != calendar_url:
                 path = urlparse(result.geturl()).path
-                calendar_url = f"{GOCOMICS_BASE_URL}calendar{path}/{self.date.strftime('%Y/%m')}"
+                calendar_url = f"{BASE_URL}calendar{path}/{self.date.strftime('%Y/%m')}"
         with urlopen(calendar_url) as result:
             calendar_list = [datetime(*[int(_element) for _element in element.replace('"', "").split("/")]) for element in load(result)]
         return calendar_list

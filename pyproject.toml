@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gocomics.py"
-version = "1.0.4"
+version = "1.1.0"
 description = "Fetch comics from GoComics."
 authors = ["Mr.Brawler <omkaar.nerurkar@gmail.com>"]
 license = "MIT"
@@ -17,6 +17,7 @@ packages = ["gocomics"]
 
 [tool.poetry.dependencies]
 beautifulsoup4 = "4.11.*"
+requests = "2.27.*"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/Pysics/gocomics.py/issues"
