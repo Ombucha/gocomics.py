@@ -20,6 +20,7 @@ Requirements
 This module requires the following modules:
 
 * `beautifulsoup4 <https://pypi.python.org/pypi/beautifulsoup4>`_
+* `requests <https://pypi.python.org/pypi/requests>`_
 
 
 Installation
