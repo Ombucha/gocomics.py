@@ -68,7 +68,7 @@ class ComicList:
         page = Request(f"{BASE_URL}comics/lists/{self.code}")
         with urlopen(page) as result:
             soup = BeautifulSoup(result.read(), "html.parser")
-        
+
         self.title = soup.find("h2", {"class": "h1"}).text
         self.author = soup.find("span", {"class": "h3"}).text[3:]
         self.formatted_date = list(soup.find("time", {"itemprop": "datePublished"}).children)[1].text

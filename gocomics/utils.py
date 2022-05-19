@@ -74,7 +74,7 @@ def search(text: str, *, category: Optional[Literal["comic", "feature"]] = "comi
     :type page: Optional[:class:`int`]
     :param sort: The method of sorting results (based on date).
     :type sort: Optional[Literal["ascending", "descending"]]
-    """    
+    """
     sorts = {"relevance": "relevance", "ascending": "date_asc", "descending": "date_desc"}
     url = requote_uri(f"{BASE_URL}search/full_results?category={category.lower()}&terms={text}&page={page}&sort={sorts[sort.lower()]}")
     page = Request(url)

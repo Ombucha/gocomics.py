@@ -119,7 +119,7 @@ class Comic:
             soup = BeautifulSoup(result.read(), "html.parser")
         banner = soup.find("img", {"class": "lazyload img-fluid"}).attrs["src"]
         return banner
-        
+
     @cached_property
     def calendar(self) -> List[datetime]:
         calendar_url = f"{BASE_URL}calendar/{self.identifier}/{self.date.strftime('%Y/%m')}"
