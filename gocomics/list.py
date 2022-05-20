@@ -58,7 +58,7 @@ class ComicList:
 
     .. warning::
 
-        This is heavy on resources when called for the first time.
+        ``comics`` is heavy on resources when called for the first time.
     """
 
     def __init__(self, code: int, infinity: Optional[int] = 20) -> None:
