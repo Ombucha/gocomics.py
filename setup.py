@@ -24,5 +24,5 @@ setup(
     python_requires='>= 3.8.0',
     packages = ["gocomics"],
     include_package_data = True,
-    install_requires = ["beautifulsoup4"]
+    install_requires = ["beautifulsoup4", "requests"]
 )
