@@ -13,7 +13,7 @@ __title__ = 'gocomics'
 __author__ = 'Omkaar'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2022 Omkaar'
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 
 from .comic import *

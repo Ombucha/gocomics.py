@@ -10,6 +10,6 @@ on_rtd = os.environ.get("READTHEDOCS") == "True"
 project = "gocomics.py"
 copyright = "2022, Omkaar"
 author = "Mr.Brawler"
-release = "1.1.2"
+release = "1.1.3"
 
 extensions = ["sphinx.ext.autodoc"]
