@@ -64,7 +64,7 @@ def fetch_comics(*, category: Optional[str] = None) -> List[str]:
     return slugs
 
 
-def search(text: str, *, category: Optional[Literal["comic", "feature"]] = "comic", page: Optional[int] = 1, sort: Optional[Literal["relevance", "ascending", "descending"]] = "relevance") -> Comic:
+def search(text: str, *, category: Optional[Literal["comic", "feature"]] = "comic", page: Optional[int] = 1, sort: Optional[Literal["relevance", "ascending", "descending"]] = "relevance") -> List[Comic]:
     """
     Searches GoComics.
 
