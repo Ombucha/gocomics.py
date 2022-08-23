@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(".."))
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 project = "gocomics.py"
 copyright = "2022, Omkaar"
-author = "Mr.Brawler"
+author = "Infiniticity"
 release = "1.1.5"
 
 extensions = ["sphinx.ext.autodoc"]

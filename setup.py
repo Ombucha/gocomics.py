@@ -11,7 +11,7 @@ setup(
     description = "Fetch comics from GoComics.",
     long_description = README,
     long_description_content_type = "text/x-rst",
-    url = "https://github.com/Pysics/gocomics.py",
+    url = "https://github.com/Infiniticity/gocomics.py",
     author = "Omkaar",
     author_email = "omkaar.nerurkar@gmail.com",
     license = "MIT",

@@ -21,7 +21,7 @@ To install the development version, do the following:
 
 .. code-block:: sh
 
-    $ git clone https://github.com/Pysics/gocomics.py
+    $ git clone https://github.com/Infiniticity/gocomics.py
 
 Make sure you have the latest version of Python installed, or if you prefer, a Python version of 3.8 or greater.
 
