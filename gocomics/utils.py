@@ -69,7 +69,7 @@ def search(text: str, *, category: Optional[Literal["comic", "feature"]] = "comi
     Searches GoComics.
 
     :param text: The text to search for.
-    :type text: str
+    :type text: :class:`str`
     :param category: The category to search in.
     :type category: Optional[Literal["comic", "feature"]]
     :param page: The page number.
