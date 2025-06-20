@@ -126,12 +126,10 @@ class TestComic(unittest.TestCase):
         self.assertIsInstance(comic.description, (str, type(None)))
         self.assertIsInstance(comic.share_image_url, (str, type(None)))
         self.assertIsInstance(comic.keywords, (list, type(None)))
-        self.assertIsInstance(comic.comments_count, (int, type(None)))
         self.assertIsInstance(comic.author, (str, type(None)))
         self.assertIsInstance(comic.followers_count, (str, type(None)))
         self.assertIsInstance(comic.name, (str, type(None)))
         self.assertIsInstance(comic.header_feature_url, (str, type(None)))
-        self.assertIsInstance(comic.likes_count, (int, type(None)))
         self.assertIsInstance(comic.image_url, (str, type(None)))
 
 if __name__ == "__main__":

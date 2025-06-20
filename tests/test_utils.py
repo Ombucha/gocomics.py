@@ -26,8 +26,8 @@ SOFTWARE.
 # pylint: skip-file
 
 import unittest
-
-from gocomics import search, search_political, get_popular_comics
+from datetime import datetime
+from gocomics import search, search_political, get_popular_comics, stream_comics, Comic
 
 class TestUtils(unittest.TestCase):
     def test_search_basic(self):
@@ -55,7 +55,6 @@ class TestUtils(unittest.TestCase):
         self.assertIsInstance(comics, list)
 
     def test_search_invalid_category(self):
-        # Should not raise, but may return empty list
         comics = search(categories=["not-a-category"])
         self.assertIsInstance(comics, list)
 
@@ -122,6 +121,31 @@ class TestUtils(unittest.TestCase):
         for c in comics:
             self.assertIsInstance(c, str)
             self.assertTrue(len(c) > 0)
+
+    def test_stream_comics_basic(self):
+        # Only test a small range to avoid excessive requests
+        start = datetime(2020, 1, 1)
+        end = datetime(2020, 1, 3)
+        comics = list(stream_comics("garfield", start_date=start, end_date=end))
+        self.assertEqual(len(comics), 3)
+        for comic in comics:
+            self.assertIsInstance(comic, Comic)
+            self.assertTrue(comic.identifier == "garfield")
+            self.assertIsInstance(comic.date, datetime)
+
+    def test_stream_comics_single_day(self):
+        day = datetime(2020, 1, 1)
+        comics = list(stream_comics("garfield", start_date=day, end_date=day))
+        self.assertEqual(len(comics), 1)
+        self.assertIsInstance(comics[0], Comic)
+        self.assertEqual(comics[0].date, day)
+
+    def test_stream_comics_invalid_range(self):
+        # Should yield nothing if start_date > end_date
+        start = datetime(2020, 1, 5)
+        end = datetime(2020, 1, 1)
+        comics = list(stream_comics("garfield", start_date=start, end_date=end))
+        self.assertEqual(comics, [])
 
 if __name__ == "__main__":
     unittest.main()
