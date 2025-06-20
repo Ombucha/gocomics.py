@@ -21,7 +21,7 @@ To install the development version, do the following:
 
 .. code-block:: sh
 
-    $ git clone https://github.com/Infiniticity/gocomics.py
+    $ git clone https://github.com/Ombucha/gocomics.py
 
 Make sure you have the latest version of Python installed, or if you prefer, a Python version of 3.8 or greater.
 
@@ -35,15 +35,10 @@ Comic
     :members:
 
 
-Comic List
-----------
-
-.. autoclass:: gocomics.ComicList
-    :members:
-
-
 Other Functions
 ---------------
 
-.. autofunction:: gocomics.fetch_comics
 .. autofunction:: gocomics.search
+.. autofunction:: gocomics.search_political
+.. autofunction:: gocomics.get_popular_comics
+.. autofunction:: gocomics.stream_comics

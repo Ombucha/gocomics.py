@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 from pathlib import Path
 
 from setuptools import setup
@@ -7,11 +9,11 @@ README = (HERE / "README.rst").read_text()
 
 setup(
     name = "gocomics.py",
-    version = "1.1.6",
+    version = "2.0.0",
     description = "Fetch comics from GoComics.",
     long_description = README,
     long_description_content_type = "text/x-rst",
-    url = "https://github.com/Infiniticity/gocomics.py",
+    url = "https://github.com/Ombucha/gocomics.py",
     author = "Omkaar",
     author_email = "omkaar.nerurkar@gmail.com",
     license = "MIT",

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2022 Omkaar
+Copyright (c) 2025 Omkaar
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,72 +25,103 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from datetime import datetime
-from urllib.parse import urlparse
 from urllib.request import Request, urlopen
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Generator
+from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup
 from requests.utils import requote_uri
 
-from .endpoints import BASE_URL
 from .comic import Comic
+from .endpoints import BASE_URL
 
 
-def fetch_comics(*, category: Optional[str] = None) -> List[str]:
+def search(
+    *,
+    last_updated_today: Optional[bool] = None,
+    categories: List[Literal["comicos-en-espanol", "family-comics", "funny-animals", "gag-comics", "graphic-novels", "mental-health-comics", "newspaper-comic-strips", "offbeat-comics", "office-humor", "relationship-comics", "sci-fi-fantasy-comics", "sports-comics", "vintage-comics", "webcomics", "kids"]] = None
+) -> List[str]:
     """
-    Fetches a list of comic URL slugs.
+    Returns an alphabetical list of comic identifiers.
 
-    :param category: The comic category.
-    :type category: :class:`str`
+    :param last_updated_today: If True, only return comics updated today.
+    :type last_updated_today: Optional[bool]
+    :param categories: A list of categories to filter the comics.
+    :type categories: List[Literal["comicos-en-espanol", "family-comics", "funny-animals", "gag-comics", "graphic-novels", "mental-health-comics", "newspaper-comic-strips", "offbeat-comics", "office-humor", "relationship-comics", "sci-fi-fantasy-comics", "sports-comics", "vintage-comics", "webcomics", "kids"]]
     """
-    slugs = []
-    if category is None:
-        page = Request(f"{BASE_URL}comics/a-to-z")
-        with urlopen(page) as result:
-            soup = BeautifulSoup(result.read(), "html.parser")
-        tags = soup.find_all("a", {"class": "gc-blended-link gc-blended-link--primary col-12 col-sm-6 col-lg-4"}, href = True)
-        for tag in tags:
-            path = urlparse(tag.attrs["href"]).path
-            slugs.append(path.split("/")[1])
-    else:
-        page = Request(f"{BASE_URL}/comics/{category.lower()}")
-        with urlopen(page) as result:
-            soup = BeautifulSoup(result.read(), "html.parser")
-        tags = soup.find_all("a", {"class": "gc-blended-link gc-blended-link--primary"}, href = True)
-        for tag in tags:
-            path = urlparse(tag.attrs["href"]).path
-            slugs.append(path.split("/")[1])
-    return slugs
+    url = f"{BASE_URL}comics/a-to-z"
+    if last_updated_today and categories:
+        url += f"?lastUpdated=today&category={','.join(categories)}"
+    elif last_updated_today:
+        url += "?lastUpdated=today"
+    elif categories:
+        url += f"?category={','.join(categories)}"
 
-
-def search(text: str, *, category: Optional[Literal["comic", "feature"]] = "comic", page: Optional[int] = 1, sort: Optional[Literal["relevance", "ascending", "descending"]] = "relevance") -> List[Comic]:
-    """
-    Searches GoComics.
-
-    :param text: The text to search for.
-    :type text: :class:`str`
-    :param category: The category to search in.
-    :type category: Optional[Literal["comic", "feature"]]
-    :param page: The page number.
-    :type page: Optional[:class:`int`]
-    :param sort: The method of sorting results (based on date).
-    :type sort: Optional[Literal["ascending", "descending"]]
-    """
-    sorts = {"relevance": "relevance", "ascending": "date_asc", "descending": "date_desc"}
-    url = requote_uri(f"{BASE_URL}search/full_results?category={category.lower()}&terms={text}&page={page}&sort={sorts[sort.lower()]}")
-    page = Request(url)
+    page = Request(requote_uri(url))
     with urlopen(page) as result:
         soup = BeautifulSoup(result.read(), "html.parser")
-    comics = []
-    if category == "comic":
-        tags = soup.find_all("a", {"itemprop": "image"}, href = True)
-        for tag in tags:
-            path = tag.attrs["href"].split("/")
-            comics.append(Comic(path[1], datetime(int(path[2]), int(path[3]), int(path[4]))))
-    else:
-        tags = soup.find_all("div", {"class": "content-section-sm"})
-        for tag in tags:
-            path = urlparse(list(tag.children)[1].attrs["href"]).path.replace("/", "")
-            comics.append(Comic(path, random = True))
-    return comics
+
+    tags = soup.find_all("a", {"class": "ComicsAtoZ_comics__link__IyrQd"})
+    return [tag.attrs["href"].split("/")[-1] for tag in tags if tag.attrs.get("href")]
+
+def search_political(
+    *,
+    last_updated_today: Optional[bool] = None,
+    categories: List[Literal["left", "center", "right"]] = None
+) -> List[str]:
+    """
+    Returns an alphabetical list of political comic identifiers.
+
+    :param last_updated_today: If True, only return comics updated today.
+    :type last_updated_today: Optional[bool]
+    :param categories: A list of political categories to filter the comics.
+    :type categories: List[Literal["left", "center", "right"]]
+    """
+    url = f"{BASE_URL}political-cartoons/political-a-to-z"
+    if last_updated_today and categories:
+        url += f"?lastUpdated=today&category={','.join(categories)}"
+    elif last_updated_today:
+        url += "?lastUpdated=today"
+    elif categories:
+        url += f"?category={','.join(categories)}"
+
+    page = Request(requote_uri(url))
+    with urlopen(page) as result:
+        soup = BeautifulSoup(result.read(), "html.parser")
+
+    tags = soup.find_all("a", {"class": "ComicsAtoZ_comics__link__IyrQd"})
+    return [tag.attrs["href"].split("/")[-1] for tag in tags if tag.attrs.get("href")]
+
+def get_popular_comics(*, political: Optional[bool] = False) -> List[str]:
+    """
+    Returns a list of popular comic identifiers.
+
+    :param political: If True, returns popular political comics.
+    :type political: Optional[bool]
+    """
+    url = f"{BASE_URL}comics/popular"
+    if political:
+        url = f"{BASE_URL}political-cartoons/political-popular"
+
+    page = Request(requote_uri(url))
+    with urlopen(page) as result:
+        soup = BeautifulSoup(result.read(), "html.parser")
+
+    tags = soup.find_all("a", {"class": "BadgeByline_badgeByline__link__uZaRR"})
+    return [tag.attrs["href"].split("/")[-1] for tag in tags if tag.attrs.get("href")]
+
+def stream_comics(identifier: str, *, start_date: Optional[datetime] = datetime(1993, 7, 12), end_date: Optional[datetime] = datetime.today()) -> Generator[Comic]:
+    """
+    Streams comics for a given identifier from `start_date` to `end_date`.
+
+    :param identifier: The comic identifier.
+    :type identifier: str
+    :param start_date: The start date for the comic stream.
+    :type start_date: Optional[datetime]
+    :param end_date: The end date for the comic stream.
+    :type end_date: Optional[datetime]
+    """
+    current_date = start_date
+    while current_date <= end_date:
+        yield Comic(identifier, current_date)
+        current_date += timedelta(days=1)

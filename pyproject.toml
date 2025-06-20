@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "gocomics.py"
-version = "1.1.6"
+version = "2.0.0"
 description = "Fetch comics from GoComics."
-authors = ["Infiniticity <omkaar.nerurkar@gmail.com>"]
+authors = ["Ombucha <omkaar.nerurkar@gmail.com>"]
 license = "MIT"
 readme = "README.rst"
-repository = "https://github.com/Infiniticity/gocomics.py/"
+repository = "https://github.com/Ombucha/gocomics.py/"
 documentation = "https://gocomics.readthedocs.io/"
-keywords = ["python", "gocomics"]
+keywords = ["python", "gocomics", "comics"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
@@ -16,8 +16,8 @@ classifiers = [
 packages = ["gocomics"]
 
 [tool.poetry.dependencies]
-beautifulsoup4 = "4.11.*"
-requests = "2.27.*"
+beautifulsoup4 = "*"
+requests = "*"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/Infiniticity/gocomics.py/issues"
+"Bug Tracker" = "https://github.com/Ombucha/gocomics.py/issues"

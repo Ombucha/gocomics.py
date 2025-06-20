@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2022 Omkaar
+Copyright (c) 2025 Omkaar
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,107 +26,293 @@ SOFTWARE.
 from __future__ import annotations
 
 from datetime import datetime
+from re import search
 from functools import cached_property
-from json import load
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 from typing import List, Optional
+from json import loads
+from subprocess import run
+from platform import system
 
 from bs4 import BeautifulSoup
 from requests.utils import requote_uri
 
 from .endpoints import BASE_URL
 
+RETRY_COUNT = 10
+
+
 class Comic:
 
     """
     A class that represents a comic.
 
+    .. note::
+
+        The latest comic is shown if no date is provided.
+        Random comics are not supported because a comic is not released every day.
+
+    .. note::
+
+        Update the value of `RETRY_COUNT` if you encounter issues with fetching comic data.
+
     :param identifier: The comic's identifier.
     :type identifier: :class:`str`
     :param date: The comic's date.
     :type date: Optional[:class:`datetime`]
-    :param random: Whether to choose a random comic, or not.
-    :type random: Optional[:class:`bool`]
-
-    .. note::
-
-        If ``random`` is ``True``, ``date`` must not be specified.
-
-    :ivar accountable_person: The person accountable for the comic.
-    :ivar avatar: The url of the comic avatar.
-    :ivar banner: The comic's banner.
-    :ivar calendar: A list containing comics released in that month.
-    :ivar code: The code associated with the comic.
-    :ivar creator: The creator of the comic.
-    :ivar date: The comic's date
-    :ivar feature_banner: The comic's banner which is featured in searches.
-    :ivar feature_id: The comic's feature ID.
-    :ivar formatted_date: A formatted version of the comic's date.
-    :ivar identifier: The comic's identifier.
-    :ivar image: The URL of the comic's image.
+    :ivar url: The URL of the comic.
+    :ivar title: The title of the comic.
+    :ivar description: The description of the comic.
+    :ivar share_image_url: The URL of the comic's share image.
+    :ivar keywords: The keywords associated with the comic.
+    :ivar author: The author of the comic.
+    :ivar followers_count: The number of followers of the comic.
     :ivar name: The name of the comic.
-    :ivar shareable_id: The comic's shareable ID.
-    :ivar url: The comic's URL.
+    :ivar header_feature_url: The URL of the comic's header feature image.
+    :ivar image_url: The URL of the comic's main image.
+    :ivar about: A list of hyperlinks and text describing the comic.
+    :ivar about_feature_url: The URL of the comic's about feature image.
+    :ivar about_author: A list of hyperlinks and text describing the comic's author.
+    :ivar author_image_url: The URL of the comic author's image.
+    :ivar social_urls: A list of hyperlinks to the comic's social media profiles.
+    :ivar characters: A list of characters in the comic.
     """
 
-    def __init__(self, identifier: str, date: Optional[datetime] = None, *, random: bool = False) -> None:
+    class Hyperlink:
+        """
+        A class that represents a hyperlink.
 
-        now = datetime.now()
+        :param url: The URL of the hyperlink.
+        :type url: :class:`str`
+        :param text: The text of the hyperlink.
+        :type text: :class:`str`
+        """
+        def __init__(self, url: str, text: str) -> None:
+            self.url = url
+            self.text = text
 
-        if date is not None and random:
-            raise ValueError("If 'random' is 'True', 'date' must not be specified.")
+        def __str__(self) -> str:
+            return self.text
 
-        if (date is not None) and ((now.year < date.year) or (now.year == date.year and now.month < date.month) or (now.year == date.year and now.month == date.month and now.day < date.day)):
-            raise ValueError("Date must be in the past.")
+        def __repr__(self) -> str:
+            return f"Hyperlink(url={self.url}, text={self.text})"
+
+    class Character:
+        """
+        A class that represents a character in a comic.
+
+        :param name: The name of the character.
+        :type name: :class:`str`
+        :param image_url: The URL of the character's image.
+        :type image_url: :class:`str`
+        :param description: A description of the character.
+        :type description: :class:`str`
+        """
+        def __init__(self, name: str, image_url: str, description: str) -> None:
+            self.name = name
+            self.image_url = image_url
+            self.description = description
+
+    def __init__(self, identifier: str, date: Optional[datetime] = None) -> None:
 
         self.identifier = identifier
-        self.date = date if date else now
+        self.date = date
 
-        if random:
-            url = f"{BASE_URL}random/{self.identifier}"
+        if date is None:
+            self.url = f"{BASE_URL}{self.identifier}"
         else:
-            url = f"{BASE_URL}{self.identifier}/{self.date.strftime('%Y/%m/%d')}"
+            self.url = f"{BASE_URL}{self.identifier}/{self.date.strftime('%Y/%m/%d')}"
 
-        page = Request(url)
-        with urlopen(page) as result:
-            soup = BeautifulSoup(result.read(), "html.parser")
+        try:
+            page = Request(self.url)
+            with urlopen(page) as result:
+                soup = BeautifulSoup(result.read(), "html.parser")
+        except HTTPError as e:
+            raise ValueError(f"Comic with identifier '{identifier}' and date '{date}' does not exist.") from e
+        except Exception as e:
+            raise ValueError("An error occurred while fetching the comic.") from e
 
-        tag = soup.find("div", {"data-shareable-model": "FeatureItem"})
-        self.shareable_id = int(tag.attrs["data-shareable-id"])
-        self.feature_id = int(tag.attrs["data-feature-id"])
-        self.name = tag.attrs["data-feature-name"]
-        self.code = tag.attrs["data-feature-code"]
-        self.image = tag.attrs["data-image"]
-        self.creator = tag.attrs["data-creator"]
-        self.formatted_date = tag.attrs["data-formatted-date"]
-        self.accountable_person = tag.attrs["accountableperson"]
-        self.url = tag.attrs["data-url"]
+        tag = soup.find("meta", {"property": "og:title"})
+        self.title = tag.attrs["content"] if tag else None
 
-        tag = list(soup.find("div", {"class": "gc-avatar gc-avatar--creator xs"}).children)[0]
-        self.avatar = tag.attrs["src"]
+        tag = soup.find("meta", {"property": "og:description"})
+        self.description = tag.attrs["content"] if tag else None
 
-        tag = soup.find("img", {"class": "lazyload img-fluid"})
-        self.banner = tag.attrs["src"]
+        tag = soup.find("meta", {"property": "og:image"})
+        self.share_image_url = tag.attrs["content"] if tag else None
+
+        tag = soup.find("meta", {"name": "keywords"})
+        self.keywords = tag.attrs["content"].split(", ") if tag else None
+
+        tag = soup.find("span", {"class": "Typography_typography__C_Hp6 Typography_typography_body2___WsK9"}).text.split(" | ")
+        self.author = tag[0][3:] if tag else None
+        self.followers_count = tag[1].split(" ")[0] if tag else None
+
+        tag = soup.find("h1", {"class": "Typography_typography__C_Hp6 Typography_typography_d2__3FxkY"})
+        self.name = tag.text if tag else None
+
+        tag = soup.find("div", {"class": "HeaderFeature_headerFeature__backgroundImage__ipPVn"})
+        style = tag.attrs["style"] if tag else None
+        if style:
+            match = search(r'url\("([^"]+)"\)', style)
+            self.header_feature_url = urlunparse(urlparse(match.group(1))._replace(query="")) if match else None
+
+        for _ in range(RETRY_COUNT):
+            tag = soup.find("div", {"id": "S:4"})
+            if tag:
+                subtag = tag.find("script", {"type": "application/ld+json"})
+                if subtag:
+                    self.image_url = loads(subtag.text)["contentUrl"]
+                    break
 
     def __eq__(self, __o: Comic) -> bool:
+        if not isinstance(__o, Comic):
+            return False
         return self.url == __o.url
 
     @cached_property
-    def feature_banner(self) -> str:
-        page = Request(requote_uri(f"{BASE_URL}search/full_results?category=feature&terms={self.name}"))
+    def about(self) -> List[Hyperlink | str]:
+        page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
         with urlopen(page) as result:
             soup = BeautifulSoup(result.read(), "html.parser")
-        banner = soup.find("img", {"class": "lazyload img-fluid"}).attrs["src"]
-        return banner
+
+        tags = soup.find("div", {"class": "AboutFeature_aboutFeature__details__ru_As"}).find("div", {"class": "RichTextParser_richTextParser__joxf7"}).find_all("p")
+        subtags = []
+        for tag in tags:
+            subtags.extend(list(tag.descendants))
+
+        text = []
+        index = 0
+        while index < len(subtags):
+            if subtags[index].name == "a":
+                text.append(self.Hyperlink(subtags[index].attrs["href"], subtags[index].text))
+                index += 2
+            else:
+                text.append(subtags[index].text)
+                index += 1
+        return text
 
     @cached_property
-    def calendar(self) -> List[datetime]:
-        calendar_url = f"{BASE_URL}calendar/{self.identifier}/{self.date.strftime('%Y/%m')}"
-        with urlopen(calendar_url) as result:
-            if result.geturl() != calendar_url:
-                path = urlparse(result.geturl()).path
-                calendar_url = f"{BASE_URL}calendar{path}/{self.date.strftime('%Y/%m')}"
-        with urlopen(calendar_url) as result:
-            calendar_list = [datetime(*[int(_element) for _element in element.replace('"', "").split("/")]) for element in load(result)]
-        return calendar_list
+    def about_feature_url(self) -> str:
+        page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
+        with urlopen(page) as result:
+            soup = BeautifulSoup(result.read(), "html.parser")
+
+        tag = soup.find("div", {"class": "AboutFeature_aboutFeature__imageContainer__nE23W"}).find("img")
+        urls = tag.attrs["srcset"].split(", ") if tag else []
+
+        banner_url = urls[0].split(" ")[0] if urls else None
+        if banner_url:
+            return urlunparse(urlparse(banner_url)._replace(query=""))
+        return None
+
+    @cached_property
+    def about_author(self) -> List[Hyperlink | str]:
+        page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
+        with urlopen(page) as result:
+            soup = BeautifulSoup(result.read(), "html.parser")
+
+        tags = soup.find("div", {"class": "AboutCreator_aboutCreator__details__6YZp3"}).find("div", {"class": "RichTextParser_richTextParser__joxf7"}).find_all("p")
+        subtags = []
+        for tag in tags:
+            subtags.extend(list(tag.descendants))
+
+        text = []
+        index = 0
+        while index < len(subtags):
+            if subtags[index].name == "a":
+                text.append(self.Hyperlink(subtags[index].attrs["href"], subtags[index].text))
+                index += 2
+            else:
+                text.append(subtags[index].text)
+                index += 1
+        return text
+
+    @cached_property
+    def author_image_url(self) -> str:
+        page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
+        with urlopen(page) as result:
+            soup = BeautifulSoup(result.read(), "html.parser")
+
+        tag = soup.find("div", {"class": "AboutCreator_aboutCreator__tcSD7"}).find("img")
+        urls = tag.attrs["srcset"].split(", ") if tag else []
+
+        image_url = urls[0].split(" ")[0] if urls else None
+        if image_url:
+            return urlunparse(urlparse(image_url)._replace(query=""))
+        return None
+
+    @cached_property
+    def social_urls(self) -> List[Hyperlink]:
+        page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
+        with urlopen(page) as result:
+            soup = BeautifulSoup(result.read(), "html.parser")
+
+        tags = soup.find_all("a", {"class": "SocialLinks_socialLinks__link__84fhl"})
+        return [tag.attrs["href"] for tag in tags]
+
+    @cached_property
+    def characters(self) -> List[Character]:
+        page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
+        with urlopen(page) as result:
+            soup = BeautifulSoup(result.read(), "html.parser")
+
+        tags = soup.find_all("div", {"class": "AboutCharacter_aboutCharacter__cAOuK"})
+        characters = []
+        for tag in tags:
+            name = tag.find("h3").text if tag.find("h3") else None
+            image_tag = tag.find("img")
+            image_url = image_tag.attrs["srcset"].split(", ")[0].split(" ")[0] if image_tag else None
+            description = tag.find("p").text if tag.find("p") else None
+
+            if name and image_url and description:
+                characters.append(self.Character(name, urlunparse(urlparse(image_url)._replace(query="")), description))
+        return characters
+
+    def download(self, *, filename: Optional[str] = None, path: Optional[str] = None) -> str:
+        """
+        Downloads the comic image and returns the file path.
+
+        :param filename: Optional filename for the downloaded image.
+        :type filename: Optional[str]
+        :param path: Optional path where the image will be saved.
+        :type path: Optional[str]
+        """
+        if not self.image_url:
+            raise ValueError("Comic does not have an image URL.")
+
+        if filename is None:
+            filename = f"{self.identifier}.png"
+
+        if path is None:
+            path = "."
+
+        if filename.split(".")[-1] not in ["png", "jpg", "jpeg"]:
+            raise ValueError("Filename must end with .png, .jpg, or .jpeg")
+
+        full_path = f"{path}/{filename}"
+        req = Request(requote_uri(self.image_url))
+
+        with urlopen(req) as response, open(full_path, "wb") as out_file:
+            out_file.write(response.read())
+
+        return full_path
+
+    def refresh(self) -> None:
+        """
+        Refreshes the comic data by re-fetching it from the website. It can be useful if a particular attribute is not set or if you want to update the comic's data without creating a new instance.
+        """
+        self.__init__(self.identifier, self.date)
+
+    def show(self, *, filename: Optional[str] = None, path: Optional[str] = None) -> None:
+        """
+        Opens the comic's URL in the default image viewer app.
+
+        :param filename: Optional filename for the downloaded image.
+        :type filename: Optional[str]
+        :param path: Optional path where the image will be saved.
+        :type path: Optional[str]
+        """
+        run(['open' if system() == 'Darwin' else 'xdg-open' if system() == 'Linux' else 'start', self.download(filename=filename, path=path)], shell=True, check=False)
