@@ -117,7 +117,7 @@ class Comic:
 
     def __init__(self, identifier: str, date: Optional[datetime] = None) -> None:
 
-        if date.year > datetime.today().year or date.month > datetime.today().month or date.day > datetime.today().day:
+        if date and (date.year > datetime.today().year or date.month > datetime.today().month or date.day > datetime.today().day):
             raise ValueError("Date cannot be in the future.")
 
         self.identifier = identifier
