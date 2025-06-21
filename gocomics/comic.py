@@ -41,7 +41,7 @@ from requests.utils import requote_uri
 
 from .endpoints import BASE_URL
 
-RETRY_COUNT = 10
+RETRY_COUNT = 20
 
 
 class Comic:
