@@ -110,7 +110,7 @@ def get_popular_comics(*, political: Optional[bool] = False) -> List[str]:
     tags = soup.find_all("a", {"class": "BadgeByline_badgeByline__link__uZaRR"})
     return [tag.attrs["href"].split("/")[-1] for tag in tags if tag.attrs.get("href")]
 
-def stream_comics(identifier: str, *, start_date: Optional[datetime] = datetime(1993, 7, 12), end_date: Optional[datetime] = datetime.today()) -> Generator[Comic]:
+def stream_comics(identifier: str, *, start_date: Optional[datetime] = datetime(1993, 7, 12), end_date: Optional[datetime] = datetime.today()) -> Generator[Comic, None, None]:
     """
     Streams comics for a given identifier from `start_date` to `end_date`.
 
