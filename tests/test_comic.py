@@ -45,7 +45,7 @@ class TestComic(unittest.TestCase):
     def test_comic_init_with_date(self):
         comic = Comic(self.identifier, self.past_date)
         self.assertEqual(comic.identifier, self.identifier)
-        self.assertEqual(comic.date, self.past_date)
+        self.assertEqual(comic.date, self.past_date.date())
         self.assertIn(self.past_date.strftime('%Y/%m/%d'), comic.url)
 
     def test_comic_init_future_date(self):

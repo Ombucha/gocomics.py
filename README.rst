@@ -62,22 +62,17 @@ Installation
 Comic API
 ---------
 
-- `gocomics.Comic` - Fetch and explore a comic
-    - `identifier` (str): The comic's identifier (e.g., "calvinandhobbes")
-    - `date` (datetime, optional): The date of the comic (default: latest)
-    - `.title`, `.description`, `.image_url`, `.author`, `.followers_count`, `.about`, `.characters`, etc.
-    - `.download(filename=None, path=None)`: Download the comic image
-    - `.show(filename=None, path=None)`: Open the comic image in your default viewer
-    - `.refresh()`: Refresh the comic's data
-- `gocomics.search` - List all comics (optionally filter by category or updated today)
-- `gocomics.search_political` - List political comics (optionally filter by category or updated today)
-- `gocomics.get_popular_comics` - Get trending/popular comics (optionally political)
-- `gocomics.stream_comics` - Iterate comics for a strip between two dates
-
-**RETRY_COUNT**
-~~~~~~~~~~~~~~~
-
-`RETRY_COUNT` is a module-level constant in `comic.py` that controls how many times the parser will attempt to extract the comic image from the page. If you encounter issues with missing images, try increasing this value.
+- ``gocomics.Comic`` - Fetch and explore a comic
+    - ``.identifier`` (str): The comic's identifier (e.g., "calvinandhobbes")
+    - ``.date`` (datetime, optional): The date of the comic (default: latest)
+    - ``.title``, ``.description``, ``.image_url``, ``.author``, ``.followers_count``, ``.about``, ``.characters``, etc.
+    - ``.download(filename=None, path=None)``: Download the comic image
+    - ``.show(filename=None, path=None)``: Open the comic image in your default viewer
+    - ``.refresh()``: Refresh the comic's data
+- ``gocomics.search`` - List all comics (optionally filter by category or updated today)
+- ``gocomics.search_political`` - List political comics (optionally filter by category or updated today)
+- ``gocomics.get_popular_comics`` - Get trending/popular comics (optionally political)
+- ``gocomics.stream_comics`` - Iterate comics for a strip between two dates
 
 Examples
 --------

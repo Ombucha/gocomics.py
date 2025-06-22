@@ -25,15 +25,16 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, date
 from re import search
 from functools import cached_property
 from urllib.parse import urlparse, urlunparse
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
-from typing import List, Optional
+from typing import List, Optional, Union
 from json import loads
 from subprocess import run
+from time import sleep
 from platform import system
 
 from bs4 import BeautifulSoup
@@ -41,7 +42,8 @@ from requests.utils import requote_uri
 
 from .endpoints import BASE_URL
 
-RETRY_COUNT = 20
+RETRY_COUNT = 5
+BASE_DELAY = 0.5
 
 
 class Comic:
@@ -56,12 +58,12 @@ class Comic:
 
     .. note::
 
-        Update the value of `RETRY_COUNT` if you encounter issues with fetching comic data.
+        Update the values of `RETRY_COUNT` and `BASE_DELAY` if you encounter issues with fetching comic data.
 
     :param identifier: The comic's identifier.
     :type identifier: :class:`str`
     :param date: The comic's date.
-    :type date: Optional[:class:`datetime`]
+    :type date: Optional[:class:`datetime` or :class:`date`]
     :ivar url: The URL of the comic.
     :ivar title: The title of the comic.
     :ivar description: The description of the comic.
@@ -115,15 +117,18 @@ class Comic:
             self.image_url = image_url
             self.description = description
 
-    def __init__(self, identifier: str, date: Optional[datetime] = None) -> None:
+    def __init__(self, identifier: str, release_date: Optional[Union[datetime, date]] = None) -> None:
 
-        if date and (date.year > datetime.today().year or date.month > datetime.today().month or date.day > datetime.today().day):
+        if release_date is not None and isinstance(release_date, datetime):
+            release_date = release_date.date()
+
+        if release_date and release_date > date.today():
             raise ValueError("Date cannot be in the future.")
 
         self.identifier = identifier
-        self.date = date
+        self.date = release_date
 
-        if date is None:
+        if self.date is None:
             self.url = f"{BASE_URL}{self.identifier}"
         else:
             self.url = f"{BASE_URL}{self.identifier}/{self.date.strftime('%Y/%m/%d')}"
@@ -133,7 +138,7 @@ class Comic:
             with urlopen(page) as result:
                 soup = BeautifulSoup(result.read(), "html.parser")
         except HTTPError as e:
-            raise ValueError(f"Comic with identifier '{identifier}' and date '{date}' does not exist.") from e
+            raise ValueError(f"Comic with identifier '{identifier}' and date '{self.date}' does not exist.") from e
         except Exception as e:
             raise ValueError("An error occurred while fetching the comic.") from e
 
@@ -163,6 +168,14 @@ class Comic:
             self.header_feature_url = urlunparse(urlparse(match.group(1))._replace(query="")) if match else None
 
         for _ in range(RETRY_COUNT):
+
+            try:
+                page = Request(self.url)
+                with urlopen(page) as result:
+                    soup = BeautifulSoup(result.read(), "html.parser")
+            except HTTPError:
+                pass
+
             tag = soup.find("div", {"id": "S:4"})
             if tag:
                 subtag = tag.find("script", {"type": "application/ld+json"})
@@ -170,13 +183,15 @@ class Comic:
                     self.image_url = loads(subtag.text)["contentUrl"]
                     break
 
+            sleep(BASE_DELAY)
+
     def __eq__(self, __o: Comic) -> bool:
         if not isinstance(__o, Comic):
             return False
         return self.url == __o.url
 
     @cached_property
-    def about(self) -> List[Hyperlink | str]:
+    def about(self) -> List[Union[Hyperlink, str]]:
         page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
         with urlopen(page) as result:
             soup = BeautifulSoup(result.read(), "html.parser")
@@ -212,7 +227,7 @@ class Comic:
         return None
 
     @cached_property
-    def about_author(self) -> List[Hyperlink | str]:
+    def about_author(self) -> List[Union[Hyperlink, str]]:
         page = Request(requote_uri(f"{BASE_URL}{self.identifier}/about"))
         with urlopen(page) as result:
             soup = BeautifulSoup(result.read(), "html.parser")

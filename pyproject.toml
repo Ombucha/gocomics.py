@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gocomics.py"
-version = "2.0.0"
+version = "2.1.0"
 description = "Fetch comics from GoComics."
 authors = ["Ombucha <omkaar.nerurkar@gmail.com>"]
 license = "MIT"
